@@ -2,17 +2,49 @@
 
 class HtmlHelper
 {
-    public function __construct() {}
 
     public $default = array();
+
+    public static $tagsArray = array(
+        'p',
+        'div',
+        'img',
+        'a',
+        'strong',
+        'em'
+    );
+
+    /**
+     * @param $tag
+     * @param $text
+     * @param array $attrs
+     * return $tag
+     */
+    public static function tag( $tag, $text, $attrs = array() ) {
+        if ( !empty($tag) ) {
+
+            foreach ( static::$tagsArray as $tagArray) {
+
+                if ( $tagArray === (string) $tag ) {
+
+                    $attr = static::parseAttrs( $attrs );
+
+                    $tag = '<' . $tag . ' ' . $attr . '>' . $text . '</' . $tag . '>';
+
+                    echo $tag;
+                }
+            }
+
+        }
+    }
 
     /**
      * @param $src
      * @param array $attrs
      */
-    public function img( $src, $attrs = array() )
+    public static function img( $src, $attrs = array() )
     {
-        $attr = $this->parseAttrs( $attrs );
+        $attr = static::parseAttrs( $attrs );
 
         $img = '<img '. $src .'  '. $attr .' />';
 
@@ -24,7 +56,7 @@ class HtmlHelper
      * @param string $attr
      * return script
      */
-    public function loadScript( $src, $attr = 'defer' )
+    public static function loadScript( $src, $attr = 'defer' )
     {
         if ( !empty($src) ) {
             echo '<script src="'. $src .'" '. $attr .'></script>';
@@ -36,7 +68,7 @@ class HtmlHelper
      * @param string $type
      * @param string $rel
      */
-    public function loadStyle( $src, $type = 'text/css', $rel = 'stylesheet' )
+    public static function loadStyle( $src, $type = 'text/css', $rel = 'stylesheet' )
     {
         if ( !empty($src) ) {
             echo '<link type="'. $type .'" rel="'. $rel .'" href="'. $src .'" />';
@@ -48,10 +80,10 @@ class HtmlHelper
      * @param array $attrs
      * @return string input
      */
-    public function input( $name = '', $attrs = array() )
+    public static function input( $name = '', $attrs = array() )
     {
 
-        $attr = $this->parseAttrs( $attrs );
+        $attr = static::parseAttrs( $attrs );
 
         if ( !empty($name) ) {
             $name = 'name="'. $name .'"';
@@ -70,10 +102,10 @@ class HtmlHelper
      * @param string $value
      * @return string textarea
      */
-    public function textarea( $name = '', $type = 'text', $attrs = array(), $value = '' )
+    public static function textarea( $name = '', $type = 'text', $attrs = array(), $value = '' )
     {
 
-        $attr = $this->parseAttrs( $attrs );
+        $attr = static::parseAttrs( $attrs );
 
         if ( !empty($name) ) {
             $name = 'name="'. $name .'"';
@@ -86,14 +118,33 @@ class HtmlHelper
     }
 
     /**
+     * @param array $items
+     * @param string $name
+     * @param array $attrs
+     * @param array $selected
+     * return $select
+     */
+    public static function select( $items = array(), $name = '', $attrs = array(), $selected = array() )
+    {
+        if ( !empty($items) ) {
+            $attr   = static::parseAttrs( $attrs );
+            $items  = static::parseItems( $items, $selected );
+
+            $select = '<select '. $name .' '. $attr .'>' . $items . '</select>';
+
+            echo $select;
+        }
+    }
+
+    /**
      * @param $url
      * @param $method
      * @param $attrs
      */
-    public function formStart( $url, $method, $attrs = array() )
+    public static function formStart( $url, $method, $attrs = array() )
     {
         if ( !empty($url) && !empty($method) ) {
-            $attr = $this->parseAttrs( $attrs );
+            $attr = static::parseAttrs( $attrs );
 
             echo '<form action="' . $url . '"  method="'. $method .'"  '. $attr .'>';
         }
@@ -102,17 +153,53 @@ class HtmlHelper
     /**
      * Return end form tag
      */
-    public function formEnd()
+    public static function formEnd()
     {
         echo '</form>';
     }
 
-    public function a( $link, $value, $target = '_self', $attrs = array() )
+    /**
+     * @param $link
+     * @param $value
+     * @param string $target
+     * @param array $attrs
+     */
+    public static function a( $link, $value, $attrs = array(), $target = '_self' )
     {
         if ( !empty($link) && !empty($value) ) {
-            $attr = $this->parseAttrs( $attrs );
+            $attr = static::parseAttrs( $attrs );
 
             echo '<a href="'. $link .'" target="' . $target . '" '. $attr .' >'. $value .'</a>';
+        }
+    }
+
+    /**
+     * @param $link
+     * @param $value
+     * @param array $attrs
+     * @param string $target
+     */
+    public static function mailto( $link, $value, $attrs = array(), $target = '_self' )
+    {
+        if ( !empty($link) && !empty($value) ) {
+            $attr = static::parseAttrs( $attrs );
+
+            echo '<a href="mailto:'. $link .'" target="' . $target . '" '. $attr .' >'. $value .'</a>';
+        }
+    }
+
+    /**
+     * @param $link
+     * @param $value
+     * @param array $attrs
+     * @param string $target
+     */
+    public static function tel( $link, $value, $attrs = array(), $target = '_self' )
+    {
+        if ( !empty($link) && !empty($value) ) {
+            $attr = static::parseAttrs( $attrs );
+
+            echo '<a href="tel:'. $link .'" target="' . $target . '" '. $attr .' >'. $value .'</a>';
         }
     }
 
@@ -123,14 +210,39 @@ class HtmlHelper
      * @param $attrs
      * @return string
      */
-    public function parseAttrs( $attrs )
+    public static function parseAttrs( $attrs )
     {
         $result = '';
 
         if ( !empty($attrs) && (gettype($attrs) === 'object' || gettype($attrs) === 'array') ) {
 
             foreach ($attrs as $attr => $value) {
-                $result .= $attr . '="' . $value . '"';
+                $result .= $attr . '="' . $value . '" ';
+            }
+
+            return $result;
+        }
+    }
+
+    /**
+     * This function parse item's from item's list
+     * Don't use $items as string / var. Only array or object
+     * @param $items - array ( key => value )
+     * @param string $selected - selected item ( If has )
+     * @return string
+     */
+    public static function parseItems( $items, $selected = '' )
+    {
+        $result = '';
+
+        if ( !empty($items) && (gettype($items) === 'object' || gettype($items) === 'array') ) {
+
+            if ( !empty($selected) ) {
+                $result .= '<option selected>'. $selected .'</option>';
+            }
+
+            foreach ($items as $key => $value) {
+                $result .= '<option value="'. $key .'">'. $value .'</option>';
             }
 
             return $result;
@@ -141,7 +253,7 @@ class HtmlHelper
      * @param $var
      * return $debug info
      */
-    public function debug( $var )
+    public static function debug( $var )
     {
         var_dump( $var );
     }
